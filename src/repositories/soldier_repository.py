@@ -7,8 +7,7 @@ class SoldierRepository:
         self.db = Database.get_instance()
 
     def get_all(self):
-
-        query = "SELECT soldier_id, callsign, full_name, rank, base_id FROM Soldiers"
+        query = "SELECT soldier_id, callsign, full_name, rank_, base_id FROM Soldiers"
 
         conn = self.db.get_connection()
         cursor = conn.cursor()
@@ -30,7 +29,7 @@ class SoldierRepository:
         return soldiers
 
     def get_by_id(self, soldier_id):
-        query = "SELECT soldier_id, callsign, full_name, rank, base_id FROM Soldiers WHERE soldier_id = %s"
+        query = "SELECT soldier_id, callsign, full_name, rank_, base_id FROM Soldiers WHERE soldier_id = %s"
 
         conn = self.db.get_connection()
         cursor = conn.cursor()
@@ -43,7 +42,7 @@ class SoldierRepository:
         return None
 
     def create(self, soldier):
-        query = "INSERT INTO Soldiers (callsign, full_name, rank, base_id) VALUES (%s, %s, %s, %s)"
+        query = "INSERT INTO Soldiers (callsign, full_name, rank_, base_id) VALUES (%s, %s, %s, %s)"
         val = (soldier.callsign, soldier.full_name, soldier.rank, soldier.base_id)
 
         conn = self.db.get_connection()
@@ -55,3 +54,42 @@ class SoldierRepository:
         soldier.soldier_id = new_id
         cursor.close()
         return new_id
+
+    def update(self, soldier):
+        if not soldier.soldier_id:
+            raise Exception("Nemůžu aktualizovat vojáka bez ID!")
+
+        query = """
+            UPDATE Soldiers 
+            SET callsign = %s, full_name = %s, rank_ = %s, base_id = %s 
+            WHERE soldier_id = %s
+        """
+        val = (soldier.callsign, soldier.full_name, soldier.rank, soldier.base_id, soldier.soldier_id)
+
+        conn = self.db.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute(query, val)
+            conn.commit()
+            return cursor.rowcount
+        except Exception as e:
+            conn.rollback()
+            raise e
+        finally:
+            cursor.close()
+
+    def delete(self, soldier_id):
+
+        query = "DELETE FROM Soldiers WHERE soldier_id = %s"
+
+        conn = self.db.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute(query, (soldier_id,))
+            conn.commit()
+            return cursor.rowcount > 0
+        except Exception as e:
+            conn.rollback()
+            raise e
+        finally:
+            cursor.close()

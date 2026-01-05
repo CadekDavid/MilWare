@@ -22,7 +22,7 @@ CREATE TABLE Soldiers (
     soldier_id INT AUTO_INCREMENT PRIMARY KEY,
     callsign VARCHAR(50) NOT NULL,
     full_name VARCHAR(100) NOT NULL,
-    rank ENUM('Private', 'Corporal', 'Sergeant', 'Lieutenant', 'General') DEFAULT 'Private',
+    rank_ ENUM('Private', 'Corporal', 'Sergeant', 'Lieutenant', 'General') DEFAULT 'Private',
     base_id INT,
     FOREIGN KEY (base_id) REFERENCES Bases(base_id) ON DELETE SET NULL
 );
@@ -56,7 +56,7 @@ INSERT INTO Bases (name, location, established_date) VALUES
 ('Alpha Base', 'Nevada Desert', '1955-05-01'),
 ('Bravo Outpost', 'Nebraska', '1980-11-15');
 
-INSERT INTO Soldiers (callsign, full_name, rank, base_id) VALUES
+INSERT INTO Soldiers (callsign, full_name, rank_, base_id) VALUES
 ('Maverick', 'Pete Mitchell', 'Lieutenant', 1),
 ('Goose', 'Nick Bradshaw', 'Lieutenant', 1),
 ('Sarge', 'John Doe', 'Sergeant', 2),
