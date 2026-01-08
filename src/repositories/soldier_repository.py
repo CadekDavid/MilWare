@@ -1,5 +1,6 @@
 from database import Database
 from models.soldier import Soldier
+import json
 
 
 class SoldierRepository:
@@ -90,6 +91,31 @@ class SoldierRepository:
             return cursor.rowcount > 0
         except Exception as e:
             conn.rollback()
+            raise e
+        finally:
+            cursor.close()
+
+    def bulk_import_json(self, json_data):
+        query = "INSERT INTO Soldiers (callsign, full_name, rank_, base_id) VALUES (%s, %s, %s, %s)"
+
+        conn = self.db.get_connection()
+        cursor = conn.cursor()
+
+        try:
+            print("--- Zahajuji transakci ---")
+            count = 0
+            for item in json_data:
+                val = (item['callsign'], item['full_name'], item['rank'], item['base_id'])
+                cursor.execute(query, val)
+                count += 1
+
+            conn.commit()
+            print("--- Transakce potvrzena (COMMIT) ---")
+            return count
+
+        except Exception as e:
+            conn.rollback()
+            print(f"!!! CHYBA IMPORTU - VRACÍM ZMĚNY (ROLLBACK) !!!")
             raise e
         finally:
             cursor.close()

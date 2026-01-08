@@ -4,7 +4,8 @@ from models.soldier import Soldier
 import sys
 from repositories.mission_repository import MissionRepository
 import os
-
+from repositories.base_repository import BaseRepository
+import json
 
 def clear_screen():
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -18,6 +19,25 @@ def print_header():
 
 def pause():
     input("\nStiskni Enter pro pokračování...")
+
+
+def action_generate_report(base_repo):
+    clear_screen()
+    print_header()
+    print("--- GENERÁLNÍ REPORT: STAV ZÁKLADEN (Agregace) ---\n")
+
+    stats = base_repo.get_base_statistics()
+
+    print(f"{'Základna':<20} {'Lokace':<20} {'Vojáci':<10} {'Vozidla'}")
+    print("-" * 60)
+
+    for stat in stats:
+        print(f"{stat['name']:<20} {stat['location']:<20} {stat['soldiers']:<10} {stat['vehicles']}")
+
+    print("\n" + "-" * 60)
+    print("Report vygenerován úspěšně.")
+    pause()
+
 
 
 def action_list_soldiers(repo):
@@ -64,9 +84,6 @@ def action_add_soldier(repo):
 
         print("Dostupné hodnosti: Private, Corporal, Sergeant, Lieutenant, General")
         rank = input("Hodnost: ")
-
-        # Pro zjednodušení dáváme base_id natvrdo nebo uživatel musí vědět číslo
-        # V pokročilé verzi bys tady vypsal seznam základen
         try:
             base_id = int(input("ID Základny (např. 1): "))
         except ValueError:
@@ -133,14 +150,40 @@ def action_delete_soldier(repo):
     pause()
 
 
-# --- AKCE S MISEMI (VAZBA M:N) ---
+def action_import_soldiers(repo):
+    clear_screen()
+    print_header()
+    print("--- HROMADNÝ IMPORT (JSON + TRANSAKCE) ---\n")
+    file_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'new_recruits.json')
+    print(f"Hledám soubor: {file_path}")
+    if not os.path.exists(file_path):
+        print("Chyba: Soubor 'data/new_recruits.json' neexistuje!")
+        print("Vytvoř ho a naplň daty.")
+        pause()
+        return
+
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+
+        print(f"Načteno {len(data)} záznamů z JSONu.")
+        print("Zapisuji do databáze...")
+        pocet = repo.bulk_import_json(data)
+        print(f"\n[ÚSPĚCH] Import dokončen. Přidáno {pocet} nových vojáků.")
+
+    except Exception as e:
+        print(f"\n[CRITICAL ERROR] Import selhal: {e}")
+        print("Díky rollbacku nebyla data poškozena.")
+
+    pause()
+
+
 
 def action_assign_mission(soldier_repo, mission_repo):
     clear_screen()
     print_header()
     print("--- ROZKAZ DO AKCE (Přiřazení na Misi) ---\n")
 
-    # 1. Výpis vojáků pro výběr
     print("Dostupní vojáci:")
     soldiers = soldier_repo.get_all()
     for s in soldiers:
@@ -148,7 +191,7 @@ def action_assign_mission(soldier_repo, mission_repo):
 
     try:
         sid = int(input("\n>>> Vyber ID vojáka: "))
-        # Rychlá kontrola, jestli voják existuje
+
         if not soldier_repo.get_by_id(sid):
             print("Chyba: Voják s tímto ID neexistuje.")
             pause()
@@ -158,7 +201,7 @@ def action_assign_mission(soldier_repo, mission_repo):
         pause()
         return
 
-    # 2. Výpis misí pro výběr
+
     print("\nDostupné mise:")
     missions = mission_repo.get_all()
     if not missions:
@@ -176,11 +219,11 @@ def action_assign_mission(soldier_repo, mission_repo):
         pause()
         return
 
-    # 3. Určení role
-    role = input("Zadej roli na misi (např. Kulometčík, Řidič, Velitel): ")
-    if not role: role = "Voják"  # Defaultní role
 
-    # 4. Zápis do M:N tabulky
+    role = input("Zadej roli na misi (např. Kulometčík, Řidič, Velitel): ")
+    if not role: role = "Voják"
+
+
     print(f"\nPřiřazuji vojáka {sid} na misi {mid} jako '{role}'...")
     if mission_repo.assign_soldier(mid, sid, role):
         print(f"[ÚSPĚCH] Rozkaz potvrzen. Voják je na seznamu mise.")
@@ -189,14 +232,11 @@ def action_assign_mission(soldier_repo, mission_repo):
 
     pause()
 
-
-# --- HLAVNÍ MENU ---
-
 def main():
     try:
-        # Inicializace repozitářů (připojení k DB)
         soldier_repo = SoldierRepository()
         mission_repo = MissionRepository()
+        base_repo = BaseRepository()
     except Exception as e:
         print(f"Kritická chyba při startu: {e}")
         print("Zkontroluj config.json a jestli běží MySQL/XAMPP.")
@@ -214,6 +254,8 @@ def main():
         print("5. Propustit vojáka (DELETE)")
         print("-" * 40)
         print("6. POSLAT VOJÁKA NA MISI (M:N Vazba)")
+        print("7. GENERÁLNÍ REPORT (Statistiky)")
+        print("8. IMPORT DATA (JSON Transakce)")
         print("-" * 40)
         print("0. Konec aplikace")
         print("=" * 50)
@@ -232,6 +274,10 @@ def main():
             action_delete_soldier(soldier_repo)
         elif choice == '6':
             action_assign_mission(soldier_repo, mission_repo)
+        elif choice == '7':
+            action_generate_report(base_repo)
+        elif choice == '8':
+            action_import_soldiers(soldier_repo)
         elif choice == '0':
             print("\nUkončuji MilWare. Rozchod!")
             sys.exit(0)
