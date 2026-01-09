@@ -1,0 +1,20 @@
+[
+  {
+    "callsign": "Ghost",
+    "full_name": "Simon Riley",
+    "rank": "Lieutenant",
+    "base_id": 1
+  },
+  {
+    "callsign": "Soap",
+    "full_name": "John MacTavish",
+    "rank": "Sergeant",
+    "base_id": 1
+  },
+  {
+    "callsign": "Price",
+    "full_name": "John Price",
+    "rank": "General",
+    "base_id": 1
+  }
+]

@@ -35,3 +35,14 @@ class BaseRepository:
                 "vehicles": row[3]
             })
         return stats
+
+
+
+    def get_all(self):
+        query = "SELECT base_id, name, location, capacity FROM Bases"
+        conn = self.db.get_connection()
+        cursor = conn.cursor()
+        cursor.execute(query)
+        rows = cursor.fetchall()
+        cursor.close()
+        return rows

@@ -1,0 +1,14 @@
+[
+  {
+    "model": "Humvee Ambulance",
+    "fuel": 18.0,
+    "ready": 1,
+    "base_id": 1
+  },
+  {
+    "model": "Apache Helicopter",
+    "fuel": 350.0,
+    "ready": 0,
+    "base_id": 1
+  }
+]
