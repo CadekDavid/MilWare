@@ -222,7 +222,6 @@ def action_import_soldiers(soldier_repo, vehicle_repo):
     print("--- IMPORT DAT ---")
     print("1. Importovat VOJÁKY (soldiers.json)")
     print("2. Importovat VOZIDLA (vehicles.json)")
-    print("3. Importovat POSILY KOMPLET (reinforcements.json - Transakce 2 tabulky)")
     choice = input("\nCo chceš nahrát? (1-3): ")
 
     filename = ""
